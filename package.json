@@ -200,7 +200,8 @@
     "failFast": true,
     "verbose": true,
     "require": [
-      "babel-core/register"
+      "babel-core/register",
+      "babel-polyfill"
     ],
     "babel": "inherit"
   }

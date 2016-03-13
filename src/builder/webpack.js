@@ -1,25 +1,29 @@
 import webpack from "webpack"
 import color from "chalk"
 
-export default (webpackConfig, log, cb) => {
-  webpack(webpackConfig, (err, stats) => {
-    if (err) {
-      throw err
-    }
+export default (webpackConfig, log) => {
+  return new Promise((resolve, reject) => {
+    const compiler = webpack(webpackConfig)
+    compiler.run((err, stats) => {
+      const jsonStats = stats.toJson()
 
-    if (stats.hasErrors()) {
-      stats.compilation.errors.forEach(
-        item => log(color.red(item.stack || item))
-      )
-      throw new Error("webpack build failed with errors")
-    }
+      debug('Webpack compile completed.')
+      debug(stats.toString(statsFormat))
 
-    if (stats.hasWarnings()) {
-      stats.compilation.warnings.forEach(
-        item => log(color.yellow("Warning: %s", item.message))
-      )
-    }
-
-    cb(stats)
+      if (err) {
+        debug('Webpack compiler encountered a fatal error.', err)
+        return reject(err)
+      }
+      else if (jsonStats.errors.length > 0) {
+        debug('Webpack compiler encountered errors.')
+        debug(jsonStats.errors.join('\n'))
+        return reject(new Error('Webpack compiler encountered errors'))
+      }
+      else if (jsonStats.warnings.length > 0) {
+        debug('Webpack compiler encountered warnings.')
+        debug(jsonStats.warnings.join('\n'))
+      }
+      resolve(jsonStats)
+    })
   })
 }

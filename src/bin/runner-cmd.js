@@ -15,4 +15,5 @@ require("babel-register")({
   ],
 })
 
+require("babel-polyfill")
 require(process.argv[2])

@@ -1,5 +1,5 @@
-import path from "path"
-import fs from "fs-extra"
+import { join } from "path"
+import fs from "fs-promise"
 import color from "chalk"
 import debug from "debug"
 
@@ -9,7 +9,7 @@ import devServer from "./server"
 import collection from "../content-loader/cache"
 import toStaticHTML from "../static"
 
-export default function(options) {
+export default async function(options) {
   const {
     config,
     store,
@@ -18,24 +18,24 @@ export default function(options) {
 
   const log = debug("statinamic:builder")
 
-  const destination = path.join(config.cwd, config.destination)
-  fs.emptyDirSync(destination)
+  try {
+    const destination = join(config.cwd, config.destination)
+    await fs.emptyDir(destination)
 
-  if (config.static) {
-    // Copy static assets to build folder
-    if (config.assets) {
-      const copyDest = path.join(destination, config.assets.route)
-      fs.copySync(config.assets.path, copyDest)
-      log(color.green("✓ Static assets: copy static assets completed"))
-    }
+    if (config.static) {
+      // Copy static assets to build folder
+      if (config.assets) {
+        await fs.copy(
+          config.assets.path,
+          join(destination, config.assets.route)
+        )
+        log(color.green("✓ Static assets: copy static assets completed"))
+      }
 
-    webpack(config.webpackConfigClient, log, (stats) => {
+      const stats = await webpack(config.webpackConfigClient, log)
       log(color.green("✓ Static assets: client build completed"))
 
-      const assetsFiles = {
-        css: [],
-        js: [],
-      }
+      const assetsFiles = { css: [], js: [] }
       const assets = stats.toJson().assetsByChunkName
 
       // Flatten object of arrays
@@ -55,7 +55,7 @@ export default function(options) {
           }
         })
 
-      toStaticHTML({
+      await toStaticHTML({
         ...config,
         urls: [
           ...options.urls || [],
@@ -66,27 +66,24 @@ export default function(options) {
         exports,
         store,
       })
-      .then(() => {
-        if (config.server) {
-          devServer(null, { config })
-        }
+      if (config.server) {
+        devServer(null, { config })
+      }
+    }
+    else if (config.server) {
+      devServer({
+        config,
+        exports,
+        store,
       })
-      .catch((error) => {
-        log(color.red("✗ Faild to start static server"))
-        setTimeout(() => {
-          throw error
-        }, 1)
-      })
-    })
+    }
+    else {
+      throw new Error("You need to specify --static or --server")
+    }
   }
-  else if (config.server) {
-    devServer({
-      config,
-      exports,
-      store,
+  catch (err) {
+    setImmedialy(() => {
+      throw err
     })
-  }
-  else {
-    throw new Error("You need to specify --static or --server")
   }
 }
