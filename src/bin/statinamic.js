@@ -1,8 +1,11 @@
-/* eslint-disable no-var */
-var program = require("commander")
-var pkg = require("../../package.json")
+"use strict"
 
-import runner from "./runner.js"
+require("babel-core/register")
+
+const program = require("commander")
+const pkg = require("../../package.json")
+
+const runner = require("./runner.js")
 
 program.version(pkg.version)
 

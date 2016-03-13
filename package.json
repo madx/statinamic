@@ -30,7 +30,7 @@
     "!**/__tests__"
   ],
   "bin": {
-    "statinamic": "lib/bin/index.js"
+    "statinamic": "src/bin/index.js"
   },
   "dependencies": {
     "babel-polyfill": "^6.5.0",

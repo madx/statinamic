@@ -1,3 +1,4 @@
+import "babel-core/require"
 import "babel-polyfill"
 
 import program from "commander"
