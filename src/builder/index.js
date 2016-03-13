@@ -82,7 +82,7 @@ export default async function(options) {
     }
   }
   catch (err) {
-    setImmedialy(() => {
+    setImmediate(() => {
       throw err
     })
   }
